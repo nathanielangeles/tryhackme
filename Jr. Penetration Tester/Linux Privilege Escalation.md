@@ -7,6 +7,7 @@ After receiving the SSH credentials for user `leonard`, I logged into the target
 ### Initial Enumeration
 
 - Checked user identity:
+
 ![2025-04-30_14-41](https://github.com/user-attachments/assets/841bccd3-d1da-47b7-8bb2-87e5b49cc5dd)
 
   ```bash
@@ -21,6 +22,7 @@ After receiving the SSH credentials for user `leonard`, I logged into the target
   Output: User `leonard` cannot run sudo.
 
 - Checked kernel version:
+
 ![2025-04-30_14-42](https://github.com/user-attachments/assets/e1585fa5-7c03-466f-bb94-5d570d9e56cd)
 
   ```bash
@@ -29,6 +31,7 @@ After receiving the SSH credentials for user `leonard`, I logged into the target
   Output showed kernel version `3.10` (possible CentOS SUID PIE LFI, but this was not pursued).
 
 - Searched for SUID binaries:
+
 ![base64](https://github.com/user-attachments/assets/2f022ead-713b-4599-92fe-bf1f61274cc5)
 
   ```bash
@@ -39,6 +42,7 @@ After receiving the SSH credentials for user `leonard`, I logged into the target
 ### Exploiting SUID Base64
 
 - Exported the shadow file path:
+
 ![2025-04-30_14-48](https://github.com/user-attachments/assets/e0e588f8-3d12-4a36-9ee3-e65fd2825c25)
 ![2025-04-30_14-48_1](https://github.com/user-attachments/assets/cf77ff48-dea8-4620-af04-d7450cc4ebe1)
 
@@ -53,6 +57,7 @@ After receiving the SSH credentials for user `leonard`, I logged into the target
   This revealed password hashes for `root`, `missy`, and `leonard`.
 
 - Verified home directories:
+
 ![2025-04-30_17-48](https://github.com/user-attachments/assets/d8761082-8faa-46ca-bc95-90b8689406a3)
 
   ```bash
@@ -61,6 +66,7 @@ After receiving the SSH credentials for user `leonard`, I logged into the target
   Output: `rootflag`, `missy`, and `leonard`
 
 - Saved missy's hash and cracked it using John the Ripper:
+
 ![2025-04-30_14-53](https://github.com/user-attachments/assets/25926e87-aa26-43be-be05-a416523b8c71)
 
   ```bash
@@ -73,6 +79,7 @@ After receiving the SSH credentials for user `leonard`, I logged into the target
 - Logged in via SSH using missy's credentials.
 
 - Checked sudo permissions:
+
 ![2025-04-30_14-55](https://github.com/user-attachments/assets/02613642-6a09-4c2b-81a0-f42dc8544f4a)
 
   ```bash
@@ -81,6 +88,7 @@ After receiving the SSH credentials for user `leonard`, I logged into the target
   Output: `missy` can run `find` as sudo.
 
 - Searched for flag1 using find:
+
 ![flag1](https://github.com/user-attachments/assets/d02fab7b-156e-4aaf-b0ef-643d7e50187f)
 
   ```bash
@@ -97,6 +105,7 @@ After obtaining `flag1.txt`, I proceeded to escalate privileges using the `find`
 ### Exploiting `find` via GTFObins
 
 - From [GTFOBins](https://gtfobins.github.io/gtfobins/find/), we know that the following command can be used to escalate to a root shell:
+
 ![2025-04-30_17-46](https://github.com/user-attachments/assets/96f072ed-fed0-44c7-b3c4-766ebc051e11)
 
 ```bash
@@ -108,6 +117,7 @@ This command starts a root shell due to the `-p` option preserving privileges.
 ### Obtaining the Final Flag
 
 Once in the root shell:
+
 ![2025-04-30_17-47](https://github.com/user-attachments/assets/84d0ec8e-71a4-4789-8d55-42fe08f21cab)
 
 - Navigated to the `rootflag` directory:
