@@ -1,5 +1,11 @@
 # RootMe Writeup (TryHackMe)
 
+## Challenge Overview
+
+RootMe is a beginner-friendly room on TryHackMe that focuses on fundamental web exploitation techniques and Linux privilege escalation. The main objectives include discovering hidden directories, bypassing file upload restrictions to get a reverse shell, and escalating privileges using a known SUID binary.
+
+---
+
 ## Enumeration
 
 Scanned the target using:
