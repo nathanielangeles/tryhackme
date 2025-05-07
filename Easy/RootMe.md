@@ -1,6 +1,6 @@
 # RootMe Writeup (TryHackMe)
 
-## 🧭 Enumeration
+## Enumeration
 
 Scanned the target using:
 
@@ -12,7 +12,7 @@ sudo nmap <target> -sS -T4 -A -oN init_scan
 
 Open ports: `22`, `80`
 
-## 🔍 Web Enumeration
+## Web Enumeration
 
 Used Gobuster to look for hidden directories:
 
@@ -24,7 +24,7 @@ gobuster dir -u http://<target-ip> -w /usr/share/wordlists/dirbuster/directory-l
 
 Found `/uploads` and `/panel`.
 
-## 💻 File Upload Exploit
+## File Upload Exploit
 
 The `/panel` directory allowed uploading files, accessible later via `/uploads`.
 
@@ -59,7 +59,7 @@ python -c 'import pty; pty.spawn("/bin/bash")'
 
 ![2025-05-07_13-03](https://github.com/user-attachments/assets/98a656b6-e3a2-4602-a1a8-b5c90bdf84bb)
 
-## 📄 User Flag
+## User Flag
 
 Located the user flag:
 
@@ -71,7 +71,7 @@ find / -type f -name user.txt 2>/dev/null
 
 Found at: `/var/www/user.txt`
 
-## 🛠️ Privilege Escalation
+## Privilege Escalation
 
 Searched for SUID binaries:
 
@@ -105,7 +105,7 @@ find / -type f -name root.txt 2>/dev/null
 
 Found at: `/root/root.txt`
 
-## 🧾 Conclusion
+## Conclusion
 
 ![2025-05-07_13-15_1](https://github.com/user-attachments/assets/9cdf2f15-332a-4895-84ae-3b1b44b24085)
 
